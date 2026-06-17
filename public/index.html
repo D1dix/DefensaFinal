@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sistema de Alerta Temprana · Abandono de Alumnos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1419; --panel:#161E27; --panel-2:#1C2731; --line:#283543;
+    --text:#E7EDF2; --muted:#8395A4; --faint:#5A6B79;
+    --amber:#E0A458; --teal:#4FB0A5; --coral:#D86B5C;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,sans-serif;color:var(--text);
+    background:
+      radial-gradient(900px 400px at 85% -5%, rgba(79,176,165,.08), transparent 55%),
+      var(--ink);
+    min-height:100vh;padding:clamp(18px,4vw,52px);line-height:1.5;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px}
+  .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;color:var(--teal);text-transform:uppercase;border:1px solid var(--line);border-radius:6px;padding:5px 9px}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(1.5rem,3.5vw,2.1rem);letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:.95rem;margin-top:6px;max-width:62ch}
+  .layout{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;margin-top:30px}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:16px;padding:clamp(18px,3vw,26px)}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 18px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1/-1}
+  label{font-size:.74rem;color:var(--muted);font-weight:500}
+  input,select{background:#0F171F;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:11px 12px;font-size:.95rem;font-family:var(--mono);transition:border-color .15s,box-shadow .15s}
+  input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(79,176,165,.14)}
+  button{grid-column:1/-1;margin-top:6px;cursor:pointer;background:var(--teal);color:#04201c;border:none;border-radius:10px;padding:14px;font-size:.98rem;font-weight:600;font-family:'Space Grotesk',sans-serif;letter-spacing:.02em;transition:filter .15s,transform .1s}
+  button:hover{filter:brightness(1.08)} button:active{transform:translateY(1px)}
+  /* resultado */
+  .result{display:flex;flex-direction:column;gap:18px}
+  .placeholder{color:var(--faint);font-size:.9rem;text-align:center;padding:30px 10px;border:1px dashed var(--line);border-radius:12px}
+  .score{text-align:center}
+  .score .pct{font-family:var(--mono);font-weight:700;font-size:3.4rem;line-height:1}
+  .score .lab{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:.85rem;margin-top:8px}
+  .meter{height:10px;border-radius:6px;background:#0F171F;border:1px solid var(--line);overflow:hidden}
+  .meter .fill{height:100%;width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+  .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.62rem;color:var(--faint);margin-top:5px}
+  .drivers h3{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600}
+  .driver{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:.85rem}
+  .driver .bar{height:7px;border-radius:4px;flex:1;background:#0F171F;border:1px solid var(--line);overflow:hidden}
+  .driver .bar i{display:block;height:100%;border-radius:4px}
+  .driver .nm{width:46%;color:var(--text)}
+  .driver.up .bar i{background:var(--coral)} .driver.down .bar i{background:var(--teal)}
+  .driver .sign{font-family:var(--mono);width:14px;text-align:center;color:var(--faint)}
+  footer{margin-top:28px;color:var(--faint);font-size:.76rem;line-height:1.7;border-top:1px solid var(--line);padding-top:18px}
+  footer b{color:var(--muted)} .err{color:var(--coral);font-size:.84rem;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="tag">Scikit Learn · LogReg</span>
+    <div>
+      <h1>Sistema de alerta temprana de abandono</h1>
+      <p class="sub">Estima el riesgo de abandono de un alumno con los datos de sus primeras semanas y muestra qué señales pesan más. Modelo de regresión logística (class_weight balanced) entrenado para priorizar la detección de alumnos en riesgo.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="card">
+      <h2>Datos del alumno</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="edad">Edad</label>
+          <input id="edad" type="number" min="16" max="60" value="26" />
+        </div>
+        <div class="field">
+          <label for="nivel_previo">Nivel previo</label>
+          <select id="nivel_previo">
+            <option value="ninguno">Ninguno</option>
+            <option value="basico">Básico</option>
+            <option value="medio">Medio</option>
+            <option value="avanzado">Avanzado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="modalidad">Modalidad</label>
+          <select id="modalidad">
+            <option value="part_time">Part time</option>
+            <option value="full_time">Full time</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="horas_semana">Horas / semana</label>
+          <input id="horas_semana" type="number" min="0" max="40" step="0.5" value="3" />
+        </div>
+        <div class="field">
+          <label for="ejercicios_completados">Ejercicios completados</label>
+          <input id="ejercicios_completados" type="number" min="0" max="80" value="3" />
+        </div>
+        <div class="field">
+          <label for="notas_avg">Nota media (0-10)</label>
+          <input id="notas_avg" type="number" min="0" max="10" step="0.1" value="4.5" />
+        </div>
+        <div class="field">
+          <label for="asistencias_directos">Asistencias a directos</label>
+          <input id="asistencias_directos" type="number" min="0" max="20" value="1" />
+        </div>
+        <div class="field">
+          <label for="preguntas_foro">Preguntas en foro</label>
+          <input id="preguntas_foro" type="number" min="0" max="40" value="0" />
+        </div>
+        <div class="field full">
+          <label for="dias_desde_ultima_conexion">Días desde última conexión</label>
+          <input id="dias_desde_ultima_conexion" type="number" min="0" max="40" value="10" />
+        </div>
+        <button id="predict">Evaluar riesgo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Evaluación</h2>
+      <div class="result">
+        <div class="placeholder" id="placeholder">Introduce los datos y pulsa <b>Evaluar riesgo</b>.</div>
+        <div class="score" id="score" style="display:none">
+          <div class="pct" id="pct">--</div>
+          <div class="lab" id="lab"></div>
+        </div>
+        <div id="meterBox" style="display:none">
+          <div class="meter"><div class="fill" id="fill"></div></div>
+          <div class="ticks"><span>0%</span><span>riesgo de abandono</span><span>100%</span></div>
+        </div>
+        <div class="drivers" id="drivers" style="display:none">
+          <h3>Factores que más pesan</h3>
+          <div id="driverList"></div>
+        </div>
+      </div>
+      <div class="err" id="err"></div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Cómo funciona:</b> modelo entrenado en Google Colab con Scikit Learn. Se exportan los parámetros del pipeline (imputación, escalado, one-hot y coeficientes) a <b>model.json</b> y la predicción se reproduce íntegramente en el navegador —sin servidor—: imputar → estandarizar → codificar → <i>w·x + b</i> → sigmoide. Inferencia idéntica a la de Scikit Learn. Desplegado en Firebase Hosting.
+  </footer>
+</div>
+
+<script>
+let M = null;
+const LABELS = {
+  edad:'Edad', horas_semana:'Horas/semana', ejercicios_completados:'Ejercicios',
+  notas_avg:'Nota media', asistencias_directos:'Asistencias', preguntas_foro:'Preguntas foro',
+  dias_desde_ultima_conexion:'Días inactivo'
+};
+
+fetch('./model.json')
+  .then(r => { if(!r.ok) throw new Error('No se pudo cargar model.json'); return r.json(); })
+  .then(m => { M = m; })
+  .catch(e => { document.getElementById('err').textContent =
+    'Error: ' + e.message + '. Comprueba que model.json está junto a index.html.'; });
+
+const num = id => { const v = document.getElementById(id).value; return v === '' ? null : Number(v); };
+const sigmoid = z => 1 / (1 + Math.exp(-z));
+
+function buildFeatures(raw){
+  // Devuelve {vector, labels} en el orden exacto del modelo
+  const vec = [], labs = [];
+  M.num_features.forEach((f, i) => {
+    let v = raw[f];
+    if(v === null || v === undefined || Number.isNaN(v)) v = M.num_impute[i];
+    vec.push((v - M.mean[i]) / M.scale[i]);
+    labs.push(LABELS[f] || f);
+  });
+  M.cat_features.forEach((f, i) => {
+    let v = raw[f];
+    if(v === null || v === undefined || v === '') v = M.cat_impute[i];
+    M.cat_categories[i].forEach(cat => {
+      vec.push(String(v) === cat ? 1 : 0);
+      labs.push(f + ': ' + cat);
+    });
+  });
+  return { vec, labs };
+}
+
+function predict(raw){
+  const { vec, labs } = buildFeatures(raw);
+  let z = M.intercept;
+  const contrib = [];
+  for(let i = 0; i < vec.length; i++){
+    const c = M.coef[i] * vec[i];
+    z += c;
+    contrib.push({ label: labs[i], c });
+  }
+  return { p: sigmoid(z), contrib };
+}
+
+document.getElementById('predict').addEventListener('click', () => {
+  const err = document.getElementById('err'); err.textContent = '';
+  if(!M){ err.textContent = 'El modelo aún no se ha cargado. Recarga la página.'; return; }
+
+  const raw = {
+    edad: num('edad'), horas_semana: num('horas_semana'),
+    ejercicios_completados: num('ejercicios_completados'), notas_avg: num('notas_avg'),
+    asistencias_directos: num('asistencias_directos'), preguntas_foro: num('preguntas_foro'),
+    dias_desde_ultima_conexion: num('dias_desde_ultima_conexion'),
+    nivel_previo: document.getElementById('nivel_previo').value,
+    modalidad: document.getElementById('modalidad').value,
+  };
+
+  const { p, contrib } = predict(raw);
+  const pct = Math.round(p * 100);
+
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('score').style.display = 'block';
+  document.getElementById('meterBox').style.display = 'block';
+  document.getElementById('drivers').style.display = 'block';
+
+  let label, color;
+  if(p >= 0.6){ label = 'Riesgo alto'; color = 'var(--coral)'; }
+  else if(p >= 0.35){ label = 'Riesgo medio'; color = 'var(--amber)'; }
+  else { label = 'Riesgo bajo'; color = 'var(--teal)'; }
+
+  const pctEl = document.getElementById('pct');
+  pctEl.textContent = pct + '%'; pctEl.style.color = color;
+  const labEl = document.getElementById('lab');
+  labEl.textContent = label; labEl.style.color = color;
+  const fill = document.getElementById('fill');
+  fill.style.background = color;
+  requestAnimationFrame(() => { fill.style.width = pct + '%'; });
+
+  // Top 4 factores por magnitud de contribución
+  const top = contrib.slice().sort((a,b) => Math.abs(b.c) - Math.abs(a.c)).slice(0, 4);
+  const maxAbs = Math.max(...top.map(t => Math.abs(t.c))) || 1;
+  document.getElementById('driverList').innerHTML = top.map(t => {
+    const up = t.c > 0;
+    const w = Math.round(Math.abs(t.c) / maxAbs * 100);
+    return `<div class="driver ${up ? 'up' : 'down'}">
+      <span class="nm">${t.label}</span>
+      <span class="bar"><i style="width:${w}%"></i></span>
+      <span class="sign">${up ? '↑' : '↓'}</span>
+    </div>`;
+  }).join('');
+});
+</script>
+</body>
+</html>

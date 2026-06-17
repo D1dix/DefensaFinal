@@ -1,0 +1,74 @@
+{
+  "num_features": [
+    "edad",
+    "horas_semana",
+    "ejercicios_completados",
+    "notas_avg",
+    "asistencias_directos",
+    "preguntas_foro",
+    "dias_desde_ultima_conexion"
+  ],
+  "cat_features": [
+    "nivel_previo",
+    "modalidad"
+  ],
+  "num_impute": [
+    28.0,
+    7.8,
+    12.0,
+    6.4,
+    3.0,
+    2.0,
+    3.0
+  ],
+  "mean": [
+    28.409375,
+    7.909688,
+    11.997917,
+    6.415625,
+    3.008333,
+    2.066667,
+    4.332292
+  ],
+  "scale": [
+    6.73394,
+    3.988517,
+    3.514849,
+    1.779807,
+    1.840497,
+    1.419262,
+    4.497569
+  ],
+  "cat_impute": [
+    "ninguno",
+    "part_time"
+  ],
+  "cat_categories": [
+    [
+      "avanzado",
+      "basico",
+      "medio",
+      "ninguno"
+    ],
+    [
+      "full_time",
+      "part_time"
+    ]
+  ],
+  "coef": [
+    -0.045061,
+    -0.322735,
+    -0.051001,
+    -0.350917,
+    -0.358163,
+    -0.295601,
+    0.501319,
+    -0.240216,
+    -0.059056,
+    0.24022,
+    -0.0242,
+    0.051664,
+    -0.134917
+  ],
+  "intercept": -0.09376
+}
